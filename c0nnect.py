@@ -23,12 +23,17 @@ class C0nnect0r(object):
         self.conn.close()
 
     def execute(self, statement):
+        """
+            make a request to sql database
+        """
         try:
             self.cursor.execute(statement)
             result = self.cursor.fetchall()
+            return result
         except sqlite3.DatabaseError as err:
             print("Error: ", err)
-        else:
+            return None
+        finally:
             self.conn.commit()
 
 class App(QWidget):
@@ -40,14 +45,27 @@ class App(QWidget):
         self.title = 'DB Connector'
         self.left = 10
         self.top = 10
-        self.width = 400
-        self.height = 400
-        self.table = QTableView()
-        self.table.setGeometry(0, 0, 400, 200)
+        self.width = 500
+        self.height = 500
+
+        self.table = QTableView(self)
+        self.table.setGeometry(20, 80, 430, 350)
         self.model = QStandardItemModel(self)
         self.table.setModel(self.model)
-
         self.initUI()
+
+    def populate(self, result):
+        """
+            appends a result from the execute function
+        """
+        row = []
+        for item in result:
+            cell = QStandardItem(str("".join(item)))
+            row.append(cell)
+        self.model.appendRow(row)
+
+        self.show() 
+
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -62,7 +80,7 @@ class App(QWidget):
         self.statement.resize(280, 25)
 
         self.button = QPushButton('execute', self)
-        self.button.move(20, 80)
+        self.button.move(300, 30)
  
         self.button.clicked.connect(self.on_click)
         self.show()
@@ -72,7 +90,8 @@ class App(QWidget):
         name = self.connection.text()
         c0nn = C0nnect0r(name)
         statement = self.statement.text()
-        c0nn.execute(statement)
+        result = c0nn.execute(statement)
+        self.populate(result)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
